@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// VIGILUM operation types.
+// PRAESIDIO operation types.
 const (
 	OPTypeGuard         = "GUARD"
 	OPCommandCheckVault = "CHECK_VAULT"
@@ -37,4 +37,4 @@ func init() {
 
 // Version is embedded at build time (see Makefile). It must be bumped on
 // every change so the on-chain registry observes a new state version.
-var Version = "0.1.0-vigilum"
+var Version = "0.1.0-praesidio"

@@ -1,4 +1,4 @@
-// VIGILUM web data layer — live Coston2 reads. Deployment values from env;
+// PRAESIDIO web data layer — live Coston2 reads. Deployment values from env;
 // only public protocol constants defaulted.
 import { createPublicClient, http, parseAbi } from "viem";
 

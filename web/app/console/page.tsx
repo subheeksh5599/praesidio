@@ -195,7 +195,7 @@ export default function ConsolePage() {
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-6">
-          <span className="text-lg font-bold tracking-tight">VIGILUM</span>
+          <span className="text-lg font-bold tracking-tight">PRAESIDIO</span>
           <nav className="flex gap-1 rounded-lg bg-sage p-1">
             {TABS.map((t) => (
               <button

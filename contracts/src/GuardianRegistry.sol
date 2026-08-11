@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAssetManager} from "./interfaces/IAssetManager.sol";
 
-/// @title VIGILUM — GuardianRegistry
+/// @title PRAESIDIO — GuardianRegistry
 /// @notice The policy + audit ledger for the confidential FAssets vault guardian.
 ///
 /// The guardian logic runs inside a Flare Confidential Compute enclave (the

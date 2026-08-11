@@ -12,7 +12,7 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VIGILUM — confidential guardian for FAssets vaults",
+  title: "PRAESIDIO — confidential guardian for FAssets vaults",
   description:
     "A 24/7 confidential guardian for FAssets agents: watches vault health, defends against liquidation, and leaves an attestable on-chain record of every action.",
 };

@@ -1,4 +1,4 @@
-// Package types contains VIGILUM's extension request/response types.
+// Package types contains PRAESIDIO's extension request/response types.
 package types
 
 import (

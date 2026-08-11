@@ -4,7 +4,7 @@ export default function LandingPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-16">
       <header className="flex items-center justify-between">
-        <span className="text-lg font-bold tracking-tight">VIGILUM</span>
+        <span className="text-lg font-bold tracking-tight">PRAESIDIO</span>
         <Link
           href="/console"
           className="rounded-lg bg-pine px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
@@ -20,7 +20,7 @@ export default function LandingPage() {
         <p className="mt-6 max-w-xl text-lg text-muted">
           FAssets agents hold real XRP as collateral for every FXRP they issue.
           When the price drops, their vault can be liquidated — real money,
-          gone in minutes. VIGILUM watches vault health every second, acts
+          gone in minutes. PRAESIDIO watches vault health every second, acts
           automatically when danger hits, and writes a signed record of every
           action to the chain.
         </p>
@@ -93,7 +93,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="mt-24 border-t border-line pt-8 text-sm text-muted">
-        VIGILUM — confidential guardian for FAssets vaults. Built on Flare
+        PRAESIDIO — confidential guardian for FAssets vaults. Built on Flare
         Confidential Compute, FAssets, FTSO v2.
       </footer>
     </main>

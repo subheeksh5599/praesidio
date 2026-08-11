@@ -9,7 +9,7 @@ interface IFAsset {
     function assetManager() external view returns (address);
 }
 
-/// @notice Deploy VIGILUM's GuardianRegistry.
+/// @notice Deploy PRAESIDIO's GuardianRegistry.
 /// The AssetManager diamond is resolved at runtime from the fAsset token's
 /// `assetManager()` — no hardcoded addresses.
 /// Usage:

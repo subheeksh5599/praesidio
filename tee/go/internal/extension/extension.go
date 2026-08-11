@@ -33,7 +33,7 @@ type Extension struct {
 	actionsSigned   uint64
 }
 
-// New sets up the VIGILUM guard server.
+// New sets up the PRAESIDIO guard server.
 func New(extensionPort, signPort int) *Extension {
 	e := &Extension{}
 

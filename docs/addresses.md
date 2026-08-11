@@ -1,4 +1,4 @@
-# VIGILUM — verified Coston2 addresses (read live)
+# PRAESIDIO — verified Coston2 addresses (read live)
 
 All verified via `cast call` against Coston2 RPC. The FAssets system is NOT
 resolved through FlareContractRegistry by the names in the docs — the entry

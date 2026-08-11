@@ -1,4 +1,4 @@
-# VIGILUM — Confidential Guardian for FAssets Vaults
+# PRAESIDIO — Confidential Guardian for FAssets Vaults
 
 Checklist. Ticks are added ONLY when a task is genuinely done AND verified against the live chain / real execution — never pre-ticked. All deployment values come from env; no mock data, no simulation, no hardcoded addresses in contracts.
 
@@ -60,7 +60,7 @@ Checklist. Ticks are added ONLY when a task is genuinely done AND verified again
 
 ## G. Deploy & repo
 
-- [ ] G1 GitHub repo (subheeksh5599/vigilum) — public, description, topics, website URL
+- [ ] G1 GitHub repo (subheeksh5599/praesidio) — public, description, topics, website URL
 - [ ] G2 Vercel deploy (manual --prod) with production envs
 - [ ] G3 Secret sweep before push — no keys, no .env, no build artifacts
 

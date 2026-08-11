@@ -16,7 +16,7 @@ if (guardId !== null && !GUARDIAN_REGISTRY) {
 }
 
 const health = await vaultHealth(vault);
-console.log("=== VIGILUM monitor — live Coston2 ===");
+console.log("=== PRAESIDIO monitor — live Coston2 ===");
 console.log(`vault:               ${health.vault}`);
 console.log(`vault collateral:    ${health.vaultCollateralWei} wei`);
 console.log(`liq factor vault:    ${health.liqFactorVaultBIPS} BIPS`);

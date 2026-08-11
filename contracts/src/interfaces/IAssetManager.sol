@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 /// @title Minimal FAssets AssetManager interface (Coston2 diamond).
-/// Only the reads VIGILUM needs. Function signatures match the facets of the
+/// Only the reads PRAESIDIO needs. Function signatures match the facets of the
 /// AssetManager diamond (flare-foundation/fassets).
 interface IAssetManager {
     /// @dev Agent vault owner's management address (immutable).

@@ -1,4 +1,4 @@
-// Shared viem client + ABIs for the VIGILUM backend. All deployment values
+// Shared viem client + ABIs for the PRAESIDIO backend. All deployment values
 // come from env; only public protocol constants (RPC, feed id) have defaults.
 import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
