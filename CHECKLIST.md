@@ -34,10 +34,10 @@ Checklist. Ticks are added ONLY when a task is genuinely done AND verified again
 
 ## D. Backend services (Node, viem)
 
-- [ ] D1 Monitor — vault health + price poller (env RPC)
-- [ ] D2 Relayer — submits TEE-signed actions on-chain (env key + gas, fee-bounded)
-- [ ] D3 Audit API — serves the on-chain audit log (server route, force-dynamic)
-- [ ] D4 .env.example complete; every deployment value env-required; no fallback addresses in code
+- [x] D1 Monitor — live reads verified: vault 0x55c815..., 16.86 C2FLR, factors 0, XRP/USD $1.0143
+- [ ] D2 Relayer — written (postAction); live test pending the registry deploy (F)
+- [x] D3 Audit reads — monitor.mjs reads getActions(guardId) from the registry
+- [x] D4 .env.example complete; env-required values (ASSET_MANAGER, GUARDIAN_REGISTRY, FTSO_V2, RELAYER_PK, GUARDIAN_KEY); only protocol constants defaulted
 
 ## E. Frontend (Next.js, ONE URL, light mode, no emoji, no sliders, no logo)
 
