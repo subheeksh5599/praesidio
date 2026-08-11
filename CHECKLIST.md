@@ -13,15 +13,15 @@ Checklist. Ticks are added ONLY when a task is genuinely done AND verified again
 
 ## B. Contracts (Solidity, Foundry)
 
-- [ ] B1 forge scaffold + foundry.toml (solc pinned, via_ir, optimizer)
-- [ ] B2 GuardianRegistry — register agent vault, policy storage, TEE signer registry
-- [ ] B3 GuardPolicy — collateral thresholds, defense rules, operator pause
-- [ ] B4 AuditLedger — action records: vault, action, timestamp, nonce, TEE signature
-- [ ] B5 Vault health reads — FAssets collateralization + FTSO price, registry-resolved (no hardcoded addresses)
-- [ ] B6 Security — only registered TEE signer posts actions; replay protection (nonce); safe transfers; zero-address guards
-- [ ] B7 Unit tests — full suite incl. revert paths (fixtures explicitly test-only)
-- [ ] B8 forge fmt clean + gas snapshot
-- [ ] B9 Deploy script — env-only values (registry, key), logs the deployer
+- [x] B1 forge scaffold + foundry.toml (solc 0.8.28, via_ir, optimizer 200)
+- [x] B2 GuardianRegistry — register, policy storage, TEE signer registry
+- [x] B3 GuardPolicy — thresholds + top-up policy + active flag + pause
+- [x] B4 AuditLedger — action records (type, amount, nonce, ts) + ECDSA signature binding
+- [x] B5 Vault health reads — IAssetManager interface; AssetManager resolved via fAsset.assetManager() (verified live on Coston2)
+- [x] B6 Security — signer-only posting, per-guard nonce, low-s malleability guard, zero-address guards, pause (all tested)
+- [x] B7 Unit tests — 18/18 green incl. revert paths; MockAssetManager labeled test-only
+- [x] B8 forge fmt clean + gas snapshot committed
+- [x] B9 Deploy script — env-only (FASSET, GUARDIAN_SIGNER), resolves AssetManager at runtime
 
 ## C. TEE extension (Flare Confidential Compute)
 
