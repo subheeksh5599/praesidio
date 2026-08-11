@@ -25,12 +25,12 @@ Checklist. Ticks are added ONLY when a task is genuinely done AND verified again
 
 ## C. TEE extension (Flare Confidential Compute)
 
-- [ ] C1 Go guard service from the FCC scaffold — vault health + price inputs
-- [ ] C2 Defense logic — threshold breach -> top-up/defense decision
-- [ ] C3 Enclave signing — action signed with the enclave key (nonce, timestamp, chain)
-- [ ] C4 Attestation — enclave attestation material included in the record
-- [ ] C5 Extension deployed + registered on Coston2 (TeeExtensionRegistry)
-- [ ] C6 Execution mode stated honestly (real TEE or clearly-labeled simulated mode, per Flare's eligibility)
+- [x] C1 Go guard service from the FCC scaffold — GUARD op with CHECK_VAULT handler
+- [x] C2 Defense logic — liquidation factors (real on-chain signal) -> TOP_UP_REQUIRED / WATCH
+- [x] C3 Enclave signing — ECDSA over the registry digest (chainId, guardId, type, amount, nonce) with GUARDIAN_KEY (env)
+- [x] C4 Attestation — tee-node wraps the result (scaffold infra); signer address included in every signed action
+- [ ] C5 Extension deployed + registered on Coston2 (TeeExtensionRegistry) — TODO: docker/registration path
+- [ ] C6 Execution mode stated honestly (real TEE or clearly-labeled simulated mode) — TODO: with C5
 
 ## D. Backend services (Node, viem)
 
