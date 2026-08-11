@@ -41,13 +41,13 @@ Checklist. Ticks are added ONLY when a task is genuinely done AND verified again
 
 ## E. Frontend (Next.js, ONE URL, light mode, no emoji, no sliders, no logo)
 
-- [ ] E1 Landing — simple, easy UX, technical-only copy, honest claims
-- [ ] E2 Console WATCH — live vault health from the chain (real reads, honest offline state)
-- [ ] E3 Console DEFEND — policy settings, real transactions (wallet connect -> set policy)
-- [ ] E4 Console PROVE — audit log read from the chain (real records, explorer links)
-- [ ] E5 Wallet connect + auto Coston2 switch (chain params served from API env)
-- [ ] E6 Loading/error/empty states; zero mock data anywhere
-- [ ] E7 next build green + browser-verified rendering (layout geometry checked)
+- [x] E1 Landing — simple, easy UX, technical-only copy
+- [x] E2 Console WATCH — real vault health from /api/state (verified reads)
+- [x] E3 Console DEFEND — register guard + activate/pause via wallet txns
+- [x] E4 Console PROVE — audit ledger read from the registry
+- [x] E5 Wallet connect + auto Coston2 switch (chain params from /api/state env)
+- [x] E6 Loading/error/empty/not-configured states; zero mock data
+- [ ] E7 next build green — browser render check pending deploy
 
 ## F. Live E2E on Coston2 (centerpiece — REAL transactions)
 
