@@ -21,12 +21,13 @@ Registry state verified on-chain: `assetManager = 0xc1Ca88b9…`,
 |---|---|---|
 | Extension ID | `0x…0102c6` (66246) | registered on FlareTeeManager `0x1a9C4A0f…` |
 | InstructionSender | `0xE2d10267EABcC068F99ED3173D1F8EF93C3A2819` | deployed; code verified on-chain |
-| TEE machine | none yet | needs a GCP Confidential Space VM (AMD SEV) — external hand-off |
+| TEE machine | `0xEd271bce…` — status 2 PRODUCTION | registered + active; URL `https://praesidio.187.127.137.136.sslip.io` (Caddy + Let's Encrypt), FTDC signing policy tracking (init 5938) |
 
-The extension is a registered FCC extension (deploy InstructionSender +
-`registerExtension`). Running it inside a real confidential VM is the remaining
-step, per `tee/docs/deployment-steps.md` step 6 (GCP Confidential Space + VPN
-to Flare's indexer DB).
+The extension is a registered FCC extension, and its TEE machine is registered
+and promoted to PRODUCTION on the FlareTeeManager with simulated testnet
+attestation (`SIMULATED_TEE=true`, `TEST_PLATFORM` — the supported Coston2
+hackathon path). Real hardware attestation (GCP AMD SEV) remains the
+production-only upgrade.
 
 ## Access path (verified)
 

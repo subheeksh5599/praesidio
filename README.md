@@ -233,7 +233,7 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Digest/signature correctness (signer vs relayer) | ✅ Real | Go + Node produce the same digest, cross-language tested |
 | Live signed action on-chain | ⚠️ Pending | needs a registered guard — i.e. an agent vault you own (see below) |
 | Web console deployed (Vercel) | ✅ Real | https://praesidio-nu.vercel.app — live reads, zero mocks |
-| TEE execution mode | ⚠️ Simulated | extension REGISTERED on FlareTeeManager (ID `0x…102c6`); runs with simulated testnet attestation (`SIMULATED_TEE=true`, Flare's documented Coston2 path) — see "Why simulated attestation" below |
+| TEE execution mode | ✅ Live (simulated attestation) | extension 66246 + TEE machine `0xEd271bce…` registered on FlareTeeManager, status 2 PRODUCTION, live at https://praesidio.187.127.137.136.sslip.io (`TEST_PLATFORM` — Flare's documented Coston2 path) |
 
 The one thing that cannot be built from a laptop is a registered guard: the
 registry only accepts a vault whose owner is the caller (verified against the
