@@ -6,7 +6,7 @@ export default function LandingPage() {
       <header className="flex items-center justify-between">
         <span className="text-lg font-bold tracking-tight">PRAESIDIO</span>
         <Link
-          href="/console"
+          href="/watch"
           className="rounded-lg bg-pine px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
           Open console
@@ -15,18 +15,19 @@ export default function LandingPage() {
 
       <section className="mt-24">
         <h1 className="max-w-2xl text-5xl font-bold leading-tight tracking-tight">
-          A 24/7 guardian for the people who back FXRP.
+          A confidential guardian for the people who back FXRP.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted">
           FAssets agents hold real XRP as collateral for every FXRP they issue.
           When the price drops, their vault can be liquidated — real money,
-          gone in minutes. PRAESIDIO watches vault health every second, acts
-          automatically when danger hits, and writes a signed record of every
-          action to the chain.
+          gone in minutes. PRAESIDIO watches vault health around the clock,
+          decides whether a top-up is needed inside a confidential enclave, and
+          writes a signed, on-chain record of every action so anyone can verify
+          what the guardian did.
         </p>
         <div className="mt-8 flex gap-3">
           <Link
-            href="/console"
+            href="/watch"
             className="rounded-lg bg-pine px-5 py-3 text-sm font-semibold text-white hover:opacity-90"
           >
             Open the console
@@ -45,12 +46,12 @@ export default function LandingPage() {
           {
             n: "1",
             t: "Watch",
-            d: "The guardian reads the vault's collateral and liquidation state from the chain, with the live XRP price, around the clock.",
+            d: "The guardian reads the vault's collateral and liquidation state from the chain, with the live XRP price, on a schedule.",
           },
           {
             n: "2",
             t: "Defend",
-            d: "When the vault becomes liquidatable, the guardian executes the defense — automatically, inside a confidential enclave, per the policy you set.",
+            d: "When the vault becomes liquidatable, the guardian signs the defense action per the policy you commit — inside a confidential enclave, so the strategy stays private.",
           },
           {
             n: "3",
@@ -86,7 +87,8 @@ export default function LandingPage() {
           <div className="card p-4">
             <p className="font-bold">On Coston2 (testnet)</p>
             <p className="mt-1 text-muted">
-              Live vaults, live prices, real transactions. Nothing simulated.
+              Live vaults, live prices, real transactions. Nothing simulated —
+              every number comes from a real chain read.
             </p>
           </div>
         </div>
@@ -94,7 +96,16 @@ export default function LandingPage() {
 
       <footer className="mt-24 border-t border-line pt-8 text-sm text-muted">
         PRAESIDIO — confidential guardian for FAssets vaults. Built on Flare
-        Confidential Compute, FAssets, FTSO v2.
+        Confidential Compute, FAssets and FTSO v2. Read the technical detail in{" "}
+        <a
+          href="https://github.com/subheeksh5599/praesidio"
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-pine hover:underline"
+        >
+          the repo
+        </a>
+        .
       </footer>
     </main>
   );

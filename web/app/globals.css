@@ -19,6 +19,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Focus is always visible (WCAG 2.4.7) — never rely on the default outline. */
+:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
+}
+
+/* Honour reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .card {
   background: var(--color-paper);
   border: 1px solid var(--color-line);
