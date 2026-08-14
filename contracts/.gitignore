@@ -1,0 +1,7 @@
+# Foundry build + deploy artifacts
+out/
+cache/
+broadcast/
+
+# env
+.env
