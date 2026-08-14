@@ -1,5 +1,9 @@
 <div align="center">
 
+<img src="docs/media/landing.png" alt="Praesidio — a confidential guardian for FAssets agent vaults" width="100%" />
+
+&nbsp;
+
 # Praesidio
 
 **A confidential guardian for FAssets agent vaults.**
@@ -16,7 +20,7 @@ ledger that anyone can verify. The strategy runs private; the record is public.
 
 ### ▶ Live at https://praesidio-nu.vercel.app
 
-Live demo ↗ · Repo ↗ · How it works ↓ · Run it locally ↓
+[Live demo ↗](https://praesidio-nu.vercel.app) · [Repo ↗](https://github.com/subheeksh5599/praesidio) · [How it works ↓](#how-praesidio-works) · [Run it locally ↓](#run-it-locally)
 
 Built for the Flare Summer Signal hackathon. MIT licensed.
 
@@ -65,6 +69,10 @@ cast call --rpc-url https://coston2-api.flare.network/ext/C/rpc \
 6
 1786677694 [1.786e9]
 ```
+
+The console, live — WATCH tab reading real Coston2 vaults (no mocks):
+
+<img src="docs/media/console.png" alt="Praesidio console — WATCH tab showing live Coston2 vaults" width="100%" />
 
 ## The problem Praesidio solves
 
