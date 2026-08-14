@@ -54,12 +54,35 @@ var ftsoABI = abi.ABI{
 	},
 }
 
+// GuardianRegistry ABI — the on-chain policy + audit ledger. The guard reads
+// guards(guardId) to learn the committed policy (active flag, top-up amount)
+// and the next nonce to sign.
+var registryABI = abi.ABI{
+	Methods: map[string]abi.Method{
+		"guards": {
+			Name:    "guards",
+			RawName: "guards",
+			Inputs:  abi.Arguments{{Name: "", Type: uint256Ty}},
+			Outputs: abi.Arguments{
+				{Name: "agentVault", Type: addressTy},
+				{Name: "owner", Type: addressTy},
+				{Name: "vaultCollateralRatioBIPS", Type: uint64Ty},
+				{Name: "topUpAmountWei", Type: uint256Ty},
+				{Name: "lastActionNonce", Type: uint64Ty},
+				{Name: "createdAt", Type: uint64Ty},
+				{Name: "active", Type: boolTy},
+			},
+		},
+	},
+}
+
 var (
 	addressTy, _ = abi.NewType("address", "", nil)
 	uint256Ty, _ = abi.NewType("uint256", "", nil)
 	uint64Ty, _  = abi.NewType("uint64", "", nil)
 	int8Ty, _    = abi.NewType("int8", "", nil)
 	bytes21Ty, _ = abi.NewType("bytes21", "", nil)
+	boolTy, _    = abi.NewType("bool", "", nil)
 )
 
 const xrpUsdFeedID = "0x015852502f55534400000000000000000000000000"
@@ -135,6 +158,51 @@ func readVaultHealth(agentVault string) (types.VaultHealth, error) {
 	h.Liquidatable = factorsOut[0].(*big.Int).Sign() > 0
 
 	return h, nil
+}
+
+// guardPolicy is the on-chain policy the guard reads from the registry.
+type guardPolicy struct {
+	AgentVault      common.Address
+	Owner           common.Address
+	RatioBIPS       uint64
+	TopUpAmountWei  *big.Int
+	LastActionNonce uint64
+	CreatedAt       uint64
+	Active          bool
+}
+
+// readGuard reads the committed policy + nonce for a guard from the registry.
+func readGuard(guardId uint64) (guardPolicy, error) {
+	var g guardPolicy
+	registry := os.Getenv("GUARDIAN_REGISTRY")
+	if registry == "" {
+		return g, fmt.Errorf("GUARDIAN_REGISTRY env required")
+	}
+	rpc := os.Getenv("COSTON2_RPC")
+	if rpc == "" {
+		rpc = "https://coston2-api.flare.network/ext/C/rpc"
+	}
+
+	data, err := registryABI.Pack("guards", new(big.Int).SetUint64(guardId))
+	if err != nil {
+		return g, fmt.Errorf("packing guards call: %w", err)
+	}
+	raw, err := ethCall(rpc, registry, data)
+	if err != nil {
+		return g, fmt.Errorf("guards eth_call: %w", err)
+	}
+	out, err := registryABI.Methods["guards"].Outputs.Unpack(raw)
+	if err != nil {
+		return g, fmt.Errorf("unpacking guards: %w", err)
+	}
+	g.AgentVault = out[0].(common.Address)
+	g.Owner = out[1].(common.Address)
+	g.RatioBIPS = out[2].(uint64)
+	g.TopUpAmountWei = out[3].(*big.Int)
+	g.LastActionNonce = out[4].(uint64)
+	g.CreatedAt = out[5].(uint64)
+	g.Active = out[6].(bool)
+	return g, nil
 }
 
 // ethCall performs a JSON-RPC eth_call against the public RPC.

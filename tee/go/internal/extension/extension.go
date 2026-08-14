@@ -17,10 +17,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/flare-foundation/go-flare-common/pkg/tee/instruction"
-	"github.com/flare-foundation/go-flare-common/pkg/tee/structs"
+	"github.com/flare-foundation/tee-node/pkg/processorutils"
 	teetypes "github.com/flare-foundation/tee-node/pkg/types"
 	teeutils "github.com/flare-foundation/tee-node/pkg/utils"
-	"github.com/flare-foundation/tee-node/pkg/processorutils"
 )
 
 type Extension struct {
@@ -40,6 +39,10 @@ func New(extensionPort, signPort int) *Extension {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /state", e.stateHandler)
 	mux.HandleFunc("POST /action", e.actionHandler)
+	// Relay interface for the guardian service: a plain JSON request/response
+	// over the same decision+signing logic. When the extension runs behind the
+	// real tee-node proxy, the guardian service calls this same endpoint.
+	mux.HandleFunc("POST /guard/check", e.guardCheckHandler)
 
 	e.Server = &http.Server{Addr: fmt.Sprintf(":%d", extensionPort), Handler: mux}
 	return e
@@ -65,20 +68,26 @@ func (e *Extension) stateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// actionHandler is boilerplate — do not modify.
-func (e *Extension) actionHandler(w http.ResponseWriter, r *http.Request) {
+// guardCheckHandler is the relayer-facing endpoint: {agentVault, guardId} in,
+// CheckVaultResponse (with a signed action when danger is detected) out.
+func (e *Extension) guardCheckHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var action teetypes.Action
-	if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
-		http.Error(w, fmt.Sprintf("decoding action: %v", err), http.StatusBadRequest)
+	var req types.CheckVaultRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("decoding request: %v", err), http.StatusBadRequest)
 		return
 	}
-
-	code, body := e.processAction(action)
+	resp, err := e.checkVaultJSON(req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("check vault: %v", err), http.StatusUnprocessableEntity)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_, _ = w.Write(body)
+	_ = json.NewEncoder(w).Encode(resp)
 }
+
+// actionHandler lives in utils.go (boilerplate). processAction routes the
+// tee-node protocol action to the guard logic.
 
 func (e *Extension) processAction(action teetypes.Action) (int, []byte) {
 	dataFixed, err := processorutils.Parse[instruction.DataFixed](action.Data.Message)
@@ -114,9 +123,8 @@ func (e *Extension) processGuard(action teetypes.Action, df *instruction.DataFix
 	}
 }
 
-// checkVault reads the agent vault's live health from Coston2, applies the
-// defense policy and — when danger is detected — signs the attestable action
-// record for the GuardianRegistry.
+// checkVault is the tee-node protocol path: it decodes the instruction's
+// OriginalMessage and delegates to the shared decision+signing logic.
 func (e *Extension) checkVault(action teetypes.Action, df *instruction.DataFixed) teetypes.ActionResult {
 	var req types.CheckVaultRequest
 	dec := json.NewDecoder(bytes.NewReader(df.OriginalMessage))
@@ -124,21 +132,44 @@ func (e *Extension) checkVault(action teetypes.Action, df *instruction.DataFixed
 	if err := dec.Decode(&req); err != nil {
 		return buildResult(action, df, nil, 0, fmt.Errorf("decoding request: %w", err))
 	}
+
+	resp, err := e.checkVaultJSON(req)
+	if err != nil {
+		return buildResult(action, df, nil, 0, err)
+	}
+	data, _ := json.Marshal(resp)
+	return buildResult(action, df, data, 1, nil)
+}
+
+// checkVaultJSON reads the agent vault's live health from Coston2, applies the
+// on-chain defense policy and — when danger is detected — signs the attestable
+// action record for the GuardianRegistry.
+//
+// Decision rule (honest and bounded): the FAssets manager's liquidation factors
+// are the danger signal (non-zero = liquidatable). The on-chain policy gates
+// the guard (active flag) and defines the action amount (topUpAmountWei) and
+// the nonce (lastActionNonce + 1). The collateral-ratio BIPS threshold is
+// committed policy; the trigger itself is the manager's liquidatable flag.
+func (e *Extension) checkVaultJSON(req types.CheckVaultRequest) (types.CheckVaultResponse, error) {
 	if !common.IsHexAddress(req.AgentVault) {
-		return buildResult(action, df, nil, 0, fmt.Errorf("agentVault must be a valid address"))
+		return types.CheckVaultResponse{}, fmt.Errorf("agentVault must be a valid address")
 	}
 
 	health, err := readVaultHealth(req.AgentVault)
 	if err != nil {
-		return buildResult(action, df, nil, 0, fmt.Errorf("reading vault health: %w", err))
+		return types.CheckVaultResponse{}, fmt.Errorf("reading vault health: %w", err)
 	}
 
-	// Decision: the FAssets manager reports non-zero liquidation factors when
-	// the agent is liquidatable — that is the guardian's danger signal.
+	guard, err := readGuard(req.GuardId)
+	if err != nil {
+		return types.CheckVaultResponse{}, fmt.Errorf("reading guard policy: %w", err)
+	}
+
 	decision := "WATCH"
 	healthy := true
 	liq, _ := strconv.ParseUint(health.LiqFactorVaultBIPS, 10, 64)
-	if liq > 0 {
+	poolLiq, _ := strconv.ParseUint(health.LiqFactorPoolBIPS, 10, 64)
+	if liq > 0 || poolLiq > 0 {
 		decision = "TOP_UP_REQUIRED"
 		healthy = false
 	}
@@ -155,10 +186,12 @@ func (e *Extension) checkVault(action teetypes.Action, df *instruction.DataFixed
 	e.checksPerformed++
 	e.mu.Unlock()
 
-	if !healthy {
-		signed, err := signTopUpAction(req.GuardId, health.MaxLiquidationAmount)
+	// Only an active guard with danger present produces a signed action.
+	if !healthy && guard.Active {
+		nonce := guard.LastActionNonce + 1
+		signed, err := signTopUpAction(req.GuardId, types.ActionVaultTopUp, guard.TopUpAmountWei.String(), nonce)
 		if err != nil {
-			return buildResult(action, df, nil, 0, fmt.Errorf("signing action: %w", err))
+			return types.CheckVaultResponse{}, fmt.Errorf("signing action: %w", err)
 		}
 		resp.Signed = signed
 		e.mu.Lock()
@@ -166,15 +199,14 @@ func (e *Extension) checkVault(action teetypes.Action, df *instruction.DataFixed
 		e.mu.Unlock()
 	}
 
-	data, _ := json.Marshal(resp)
-	return buildResult(action, df, data, 1, nil)
+	return resp, nil
 }
 
 // signTopUpAction produces the ECDSA signature the GuardianRegistry verifies:
 // keccak("\x19Ethereum Signed Message:\n32" || keccak(abi.encode(chainId,
 // guardId, actionType, amount, nonce))). The enclave key comes from
 // GUARDIAN_KEY (env, injected into the confidential VM).
-func signTopUpAction(guardId uint64, maxLiquidationAmount string) (*types.SignedAction, error) {
+func signTopUpAction(guardId uint64, actionType uint8, amount string, nonce uint64) (*types.SignedAction, error) {
 	keyHex := os.Getenv("GUARDIAN_KEY")
 	if keyHex == "" {
 		return nil, fmt.Errorf("GUARDIAN_KEY not set inside the enclave")
@@ -188,9 +220,8 @@ func signTopUpAction(guardId uint64, maxLiquidationAmount string) (*types.Signed
 	if err != nil || chainId == 0 {
 		chainId = 114 // Coston2
 	}
-	nonce := uint64(1) // per-guard nonce enforced by the registry; the relayer maps it
 
-	digest := registryDigest(chainId, guardId, 1, nonce, maxLiquidationAmount)
+	digest := registryDigest(chainId, guardId, uint64(actionType), nonce, amount)
 	sig, err := crypto.Sign(digest.Bytes(), priv)
 	if err != nil {
 		return nil, fmt.Errorf("signing digest: %w", err)
@@ -198,8 +229,8 @@ func signTopUpAction(guardId uint64, maxLiquidationAmount string) (*types.Signed
 
 	return &types.SignedAction{
 		GuardId:    guardId,
-		ActionType: 1,
-		Amount:     maxLiquidationAmount,
+		ActionType: actionType,
+		Amount:     amount,
 		Nonce:      nonce,
 		ChainId:    chainId,
 		Digest:     digest.Hex(),
