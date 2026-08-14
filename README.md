@@ -6,7 +6,7 @@
 
 Praesidio watches an FAssets agent's vault collateralization from inside a
 trusted execution environment, decides when a top-up is needed, signs the
-action with the enclave key, and writes every decision to an on-chain audit
+action with the guard key, and writes every decision to an on-chain audit
 ledger that anyone can verify. The strategy runs private; the record is public.
 
 ![tests](https://img.shields.io/badge/tests-18%20passed-green)
@@ -105,11 +105,12 @@ function getAgentLiquidationFactorsAndMaxAmount(
 Inside the Flare Confidential Compute extension, the `CHECK_VAULT` guard
 compares the liquidation factors and collateralization ratio against the
 vault's policy thresholds. The decision — `TOP_UP_REQUIRED` or `WATCH` — is
-computed privately; nobody outside the enclave sees the policy.
+computed inside the guard; in the real-enclave path nobody outside the enclave
+sees the policy.
 
 ### 3 · Sign
 
-When a top-up is required, the enclave signs the action digest with its
+When a top-up is required, the guard signs the action digest with its
 `GUARDIAN_KEY`:
 
 ```
@@ -117,7 +118,7 @@ keccak256(abi.encodePacked(chainId, guardId, actionType, amountWei, nonce))
 ```
 
 The signer address is included in every signed action, so the on-chain
-registry can verify the enclave's identity without trusting any relay.
+registry can verify the guard's identity without trusting any relay.
 
 ### 4 · Post
 
@@ -182,9 +183,9 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Component | Technology | Responsibility |
 |---|---|---|
 | GuardianRegistry | Solidity / Foundry | Vault registration, policy storage, signer registry, signed action ledger |
-| TEE guard | Go (FCC extension scaffold) | Private vault-health check, policy gating, enclave signing |
+| TEE guard | Go (FCC extension scaffold) | Private vault-health check, policy gating, guard signing |
 | Monitor | Node / viem | Live chain reads — collateral, factors, price |
-| Relayer | Node / viem | Submits enclave-signed actions to the registry |
+| Relayer | Node / viem | Submits guard-signed actions to the registry |
 | Console | Next.js / viem | WATCH / DEFEND / PROVE — real transactions, zero mocks |
 
 ## Engineering decisions — the hard problems
@@ -204,9 +205,11 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 4. **No hardcoded deployment values.** Contract addresses, the guardian signer
    and RPCs come from env; only protocol constants are defaulted. The deploy
    script resolves the AssetManager at runtime from the fAsset address.
-5. **Key custody inside the enclave.** The signing key lives in the TEE; the
+5. **Key custody inside the guard.** The signing key lives with the guard; the
    on-chain registry stores only the derived signer address. Anyone can verify
-   an action was enclave-signed without the key ever leaving the enclave.
+   an action was guard-signed without the key ever appearing on-chain. (In the
+   real-enclave path, the key is generated and held inside the TEE — see
+   "Why simulated attestation" above.)
 
 ## What's real vs pending — the honesty table
 
@@ -214,7 +217,7 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 |---|---|---|
 | GuardianRegistry (register, policy, signer, action ledger) | ✅ Real | `contracts/src/GuardianRegistry.sol`, 18/18 tests green |
 | Replay / low-s malleability / signer-only posting guards | ✅ Real | tested revert paths |
-| Registry deployed on Coston2 | ✅ Real | `0xc657e198…`, owner + enclave signer set, verified on-chain |
+| Registry deployed on Coston2 | ✅ Real | `0xc657e198…`, owner + guard signer set, verified on-chain |
 | TEE guard extension (Go) | ✅ Real | builds + tests green; `CHECK_VAULT` reads real chain signals live |
 | Guardian service (loop + TEE wiring + nonce safety) | ✅ Real | `backend/service.mjs`; reads guards, calls the TEE, relays signed actions |
 | Backend monitor — live Coston2 reads | ✅ Real | verified: vault `0x55c815…`, 16,864,377,661 wei collateral, XRP/USD live |
@@ -222,13 +225,40 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Digest/signature correctness (signer vs relayer) | ✅ Real | Go + Node produce the same digest, cross-language tested |
 | Live signed action on-chain | ⚠️ Pending | needs a registered guard — i.e. an agent vault you own (see below) |
 | Web console deployed (Vercel) | ✅ Real | https://praesidio-nu.vercel.app — live reads, zero mocks |
-| Real TEE execution mode | ⚠️ Pending | extension REGISTERED on FlareTeeManager (ID `0x…102c6`); the TEE machine (GCP Confidential Space VM) is the remaining external hand-off |
+| TEE execution mode | ⚠️ Simulated | extension REGISTERED on FlareTeeManager (ID `0x…102c6`); runs with simulated testnet attestation (`SIMULATED_TEE=true`, Flare's documented Coston2 path) — see "Why simulated attestation" below |
 
 The one thing that cannot be built from a laptop is a registered guard: the
 registry only accepts a vault whose owner is the caller (verified against the
 AssetManager), and creating an agent vault requires the FAssets agent-creation
 flow (FDC AddressValidity attestation + collateral deposit). Everything up to
 that boundary is built, tested and live.
+
+### Why simulated attestation
+
+The extension is a real, registered Flare Confidential Compute extension — the
+`InstructionSender` is deployed and the extension is registered on the
+FlareTeeManager (ID `0x…102c6`). The TEE machine itself, however, runs with
+**simulated** attestation (`SIMULATED_TEE=true`, `TEST_PLATFORM`) rather than
+real hardware attestation. That is deliberate, and it is exactly what Flare's
+own "Build Your First Extension" guide prescribes for Coston2:
+
+- Flare Confidential Compute is "in the final stages of development and not yet
+  a fully public production system," so real hardware attestation is a
+  production concern, not a testnet one.
+- Flare's Coston2 guide runs "a local simulated TEE against the live Coston2
+  chain," with `SIMULATED_TEE=true` described as "use a simulated code
+  hash/platform so you can develop without Confidential VM hardware."
+
+What the simulated path still proves: the full FCC loop — a registered
+extension, an FTDC-attested TEE machine, instructions relayed by data
+providers, and results signed with a boot-generated TEE identity key that are
+verifiable on-chain.
+
+What it deliberately does not prove: hardware isolation. Real attestation means
+a measured `GCP_AMD_SEV` code hash from a GCP Confidential Space VM built with
+`MODE=0`. That is the production path and the one remaining step for a
+mainnet-grade confidentiality proof. Until then the guard's signing key is
+injected from env, and this README labels that honestly.
 
 ## Tests
 
@@ -287,8 +317,8 @@ npm run dev
 | `ASSET_MANAGER` | resolved at runtime | AssetManager diamond (`0xc1Ca88b9…`) |
 | `FTSO_V2` | `0xC4e9c78E…` | FTSO v2 feed contract |
 | `GUARDIAN_REGISTRY` | `0xc657e198…` | deployed registry (Coston2) |
-| `GUARDIAN_SIGNER` | — | enclave signer address registered on-chain |
-| `GUARDIAN_KEY` | — | enclave signing key (TEE env only) |
+| `GUARDIAN_SIGNER` | — | guard signer address registered on-chain |
+| `GUARDIAN_KEY` | — | guard signing key (TEE env only) |
 | `RELAYER_PK` | — | relayer private key (gas payer) |
 
 ## Deploy
@@ -306,7 +336,7 @@ solc 0.8.28, via_ir, optimizer 200 (cancun) — the settings the explorer
 verification flow passes automatically.
 
 Live on Coston2: `GuardianRegistry 0xc657e19857630e74d1ea468c141d89ce8459c44e`
-(deploy tx `0x38bf3270…`, enclave signer `0x095b2B51…`, verified on-chain —
+(deploy tx `0x38bf3270…`, guard signer `0x095b2B51…`, verified on-chain —
 see `docs/addresses.md`).
 
 ## Project layout
@@ -341,8 +371,11 @@ praesidio/
 
 - Deploy GuardianRegistry on Coston2 and run the full live loop: register a
   real vault, TEE check, signed top-up action, on-chain audit record.
-- Register the extension with the TEE registry and run in real enclave mode
-  (currently clearly-labeled until the docker/registration path is done).
+- Run the TEE stack (extension-tee + ext-proxy) against Coston2 with simulated
+  attestation — needs Flare's Coston2 indexer read-only credentials; then
+  `post-build.sh` registers the TEE machine (Flare's documented Coston2 path).
+- For a mainnet-grade confidentiality proof: build `MODE=0` and run in a real
+  GCP Confidential Space VM (AMD SEV) with `GCP_AMD_SEV` attestation.
 - Deploy the console and connect PROVE to live ledger rows.
 - FAssets v2 (FBTC / FDOGE) — the same guardian ports to the new agent market.
 - Redemption leg: signed actions for redemption management, not just top-ups.
