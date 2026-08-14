@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useConsole, type ConsoleState } from "@/lib/console-context";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Shared gate. Children is a render function that only runs once the state is
 // loaded and configured — so a page never dereferences null during SSR
@@ -16,11 +18,10 @@ export default function ConsoleGate({
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-7 w-48 animate-pulse rounded-lg bg-sage" />
+        <Skeleton className="h-7 w-48" />
         <div className="grid gap-4 md:grid-cols-2">
-          {[0, 1].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-sage/60" />
-          ))}
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
         </div>
       </div>
     );
@@ -28,25 +29,29 @@ export default function ConsoleGate({
 
   if (error || state?.error) {
     return (
-      <div className="card p-6">
-        <h2 className="text-xl font-bold">Could not read the chain</h2>
-        <p className="mt-2 break-all text-muted">{error ?? state?.error}</p>
-        <p className="mt-3 text-sm text-muted">
+      <Card>
+        <CardHeader>
+          <CardTitle>Could not read the chain</CardTitle>
+          <CardDescription className="break-all">{error ?? state?.error}</CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
           The Coston2 RPC is unreachable from here. Retry in a moment.
-        </p>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (!state?.configured) {
     return (
-      <div className="card p-6">
-        <h2 className="text-xl font-bold">Not configured</h2>
-        <p className="mt-2 text-muted">
-          Set ASSET_MANAGER, GUARDIAN_REGISTRY and FTSO_V2 in the deployment env.
-          Nothing is displayed until then.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Not configured</CardTitle>
+          <CardDescription>
+            Set ASSET_MANAGER, GUARDIAN_REGISTRY and FTSO_V2 in the deployment env.
+            Nothing is displayed until then.
+          </CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
