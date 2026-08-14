@@ -235,11 +235,21 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Web console deployed (Vercel) | ✅ Real | https://praesidio-nu.vercel.app — live reads, zero mocks |
 | TEE execution mode | ✅ Live (simulated attestation) | extension 66246 + TEE machine `0xEd271bce…` registered on FlareTeeManager, status 2 PRODUCTION, live at https://praesidio.187.127.137.136.sslip.io (`TEST_PLATFORM` — Flare's documented Coston2 path) |
 
-The one thing that cannot be built from a laptop is a registered guard: the
-registry only accepts a vault whose owner is the caller (verified against the
-AssetManager), and creating an agent vault requires the FAssets agent-creation
-flow (FDC AddressValidity attestation + collateral deposit). Everything up to
-that boundary is built, tested and live.
+### Why no live defense transaction yet
+
+The ledger has zero defense rows because no guard is registered, and a guard
+can only be registered for an agent vault you own. The registry verifies the
+caller is the vault's owner against the AssetManager, so you cannot register a
+guard for a vault you don't control.
+
+Owning an agent vault means creating one, and that step is Flare-gated. The
+FAssets docs state agents are "verified through governance," and the whitelist
+write (`whitelistAndDescribeAgent`) is `onlyGovernanceOrManager` — not
+self-serve, not a faucet. So the one missing piece is Flare-side: an agent
+identity whitelisted on Coston2. Everything after it — FDC AddressValidity
+attestation, `createAgentVault`, collateral deposit, `registerAgentVault`, and
+the first signed action firing on the already-running guardian loop — is
+scriptable and ready.
 
 ### Why simulated attestation
 
