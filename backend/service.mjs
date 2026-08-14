@@ -26,7 +26,8 @@ import { ACTION } from "./digest.mjs";
 const RPC = process.env.COSTON2_RPC_URL ?? "https://coston2-api.flare.network/ext/C/rpc";
 const TEE_URL = (process.env.TEE_URL ?? "http://127.0.0.1:8080").replace(/\/$/, "");
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS ?? 20000);
-const HEALTH_PORT = Number(process.env.HEALTH_PORT ?? 9000);
+// Render (and other PaaS) inject PORT — prefer it over HEALTH_PORT.
+const HEALTH_PORT = Number(process.env.PORT ?? process.env.HEALTH_PORT ?? 9000);
 const CHAIN_ID = Number(process.env.CHAIN_ID ?? 114);
 const EXPLORER = "https://coston2-explorer.flare.network";
 

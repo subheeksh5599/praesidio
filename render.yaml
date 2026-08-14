@@ -1,0 +1,29 @@
+# Render Blueprint — one-click deploy of the PRAESIDIO guardian (TEE + relay).
+# Point Render at this repo and it builds the Dockerfile below.
+
+services:
+  - type: web
+    name: praesidio-guardian
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: COSTON2_RPC_URL
+        value: https://coston2-api.flare.network/ext/C/rpc
+      - key: ASSET_MANAGER
+        value: 0xc1Ca88b937d0b528842F95d5731ffB586f4fbDFA
+      - key: GUARDIAN_REGISTRY
+        value: 0xc657e19857630e74d1ea468c141d89ce8459c44e
+      - key: FTSO_V2
+        value: 0xC4e9c78EA53db782E28f28Fdf80BaF59336B304d
+      - key: RELAYER_PK
+        sync: false          # set this as a Render secret (testnet key)
+      - key: GUARDIAN_KEY
+        sync: false          # set this as a Render secret (enclave key)
+      - key: CHAIN_ID
+        value: "114"
+      - key: TEE_URL
+        value: http://127.0.0.1:8080
+      - key: POLL_INTERVAL_MS
+        value: "20000"
