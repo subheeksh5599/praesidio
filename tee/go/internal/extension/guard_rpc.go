@@ -16,74 +16,33 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// ABIs are parsed from JSON signatures so the 4-byte function selectors are
+// computed correctly. (A manually-constructed abi.Method leaves its ID zero,
+// which silently sends the wrong selector and reverts on-chain.)
+
+func mustParseABI(jsonStr string) abi.ABI {
+	a, err := abi.JSON(strings.NewReader(jsonStr))
+	if err != nil {
+		panic(fmt.Sprintf("bad ABI: %v", err))
+	}
+	return a
+}
+
 // AssetManager reads used by the guard. Selectors must match the Coston2
 // FAssets diamond facets.
-var assetManagerABI = abi.ABI{
-	Methods: map[string]abi.Method{
-		"getAgentLiquidationFactorsAndMaxAmount": {
-			Name:    "getAgentLiquidationFactorsAndMaxAmount",
-			RawName: "getAgentLiquidationFactorsAndMaxAmount",
-			Inputs:  abi.Arguments{{Name: "_agentVault", Type: addressTy}},
-			Outputs: abi.Arguments{
-				{Name: "liquidationPaymentFactorVaultBIPS", Type: uint256Ty},
-				{Name: "liquidationPaymentFactorPoolBIPS", Type: uint256Ty},
-				{Name: "maxLiquidationAmountUBA", Type: uint256Ty},
-			},
-		},
-		"getAgentFullVaultCollateral": {
-			Name:    "getAgentFullVaultCollateral",
-			RawName: "getAgentFullVaultCollateral",
-			Inputs:  abi.Arguments{{Name: "_agentVault", Type: addressTy}},
-			Outputs: abi.Arguments{{Name: "", Type: uint256Ty}},
-		},
-	},
-}
+var assetManagerABI = mustParseABI(`[
+  {"type":"function","name":"getAgentLiquidationFactorsAndMaxAmount","inputs":[{"name":"_agentVault","type":"address"}],"outputs":[{"name":"liquidationPaymentFactorVaultBIPS","type":"uint256"},{"name":"liquidationPaymentFactorPoolBIPS","type":"uint256"},{"name":"maxLiquidationAmountUBA","type":"uint256"}],"stateMutability":"view"},
+  {"type":"function","name":"getAgentFullVaultCollateral","inputs":[{"name":"_agentVault","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view"}
+]`)
 
-var ftsoABI = abi.ABI{
-	Methods: map[string]abi.Method{
-		"getFeedById": {
-			Name:    "getFeedById",
-			RawName: "getFeedById",
-			Inputs:  abi.Arguments{{Name: "_feedId", Type: bytes21Ty}},
-			Outputs: abi.Arguments{
-				{Name: "value", Type: uint256Ty},
-				{Name: "decimals", Type: int8Ty},
-				{Name: "timestamp", Type: uint64Ty},
-			},
-		},
-	},
-}
+var ftsoABI = mustParseABI(`[
+  {"type":"function","name":"getFeedById","inputs":[{"name":"_feedId","type":"bytes21"}],"outputs":[{"name":"value","type":"uint256"},{"name":"decimals","type":"int8"},{"name":"timestamp","type":"uint64"}],"stateMutability":"view"}
+]`)
 
-// GuardianRegistry ABI — the on-chain policy + audit ledger. The guard reads
-// guards(guardId) to learn the committed policy (active flag, top-up amount)
-// and the next nonce to sign.
-var registryABI = abi.ABI{
-	Methods: map[string]abi.Method{
-		"guards": {
-			Name:    "guards",
-			RawName: "guards",
-			Inputs:  abi.Arguments{{Name: "", Type: uint256Ty}},
-			Outputs: abi.Arguments{
-				{Name: "agentVault", Type: addressTy},
-				{Name: "owner", Type: addressTy},
-				{Name: "vaultCollateralRatioBIPS", Type: uint64Ty},
-				{Name: "topUpAmountWei", Type: uint256Ty},
-				{Name: "lastActionNonce", Type: uint64Ty},
-				{Name: "createdAt", Type: uint64Ty},
-				{Name: "active", Type: boolTy},
-			},
-		},
-	},
-}
-
-var (
-	addressTy, _ = abi.NewType("address", "", nil)
-	uint256Ty, _ = abi.NewType("uint256", "", nil)
-	uint64Ty, _  = abi.NewType("uint64", "", nil)
-	int8Ty, _    = abi.NewType("int8", "", nil)
-	bytes21Ty, _ = abi.NewType("bytes21", "", nil)
-	boolTy, _    = abi.NewType("bool", "", nil)
-)
+// GuardianRegistry — the on-chain policy + audit ledger.
+var registryABI = mustParseABI(`[
+  {"type":"function","name":"guards","inputs":[{"name":"","type":"uint256"}],"outputs":[{"name":"agentVault","type":"address"},{"name":"owner","type":"address"},{"name":"vaultCollateralRatioBIPS","type":"uint64"},{"name":"topUpAmountWei","type":"uint256"},{"name":"lastActionNonce","type":"uint64"},{"name":"createdAt","type":"uint64"},{"name":"active","type":"bool"}],"stateMutability":"view"}
+]`)
 
 const xrpUsdFeedID = "0x015852502f55534400000000000000000000000000"
 
@@ -137,8 +96,10 @@ func readVaultHealth(agentVault string) (types.VaultHealth, error) {
 	}
 	h.VaultCollateralWei = collOut[0].(*big.Int).String()
 
-	// FTSO v2 XRP/USD.
-	feedData, err := ftsoABI.Pack("getFeedById", common.Hex2Bytes(strings.TrimPrefix(xrpUsdFeedID, "0x")))
+	// FTSO v2 XRP/USD. bytes21 is a fixed [21]byte array in the ABI.
+	var feedID [21]byte
+	copy(feedID[:], common.Hex2Bytes(strings.TrimPrefix(xrpUsdFeedID, "0x")))
+	feedData, err := ftsoABI.Pack("getFeedById", feedID)
 	if err != nil {
 		return h, fmt.Errorf("packing feed call: %w", err)
 	}
@@ -155,7 +116,7 @@ func readVaultHealth(agentVault string) (types.VaultHealth, error) {
 	h.XrpUsd = formatPrice(value, decimals)
 
 	// Liquidatable = the manager reports non-zero liquidation factors.
-	h.Liquidatable = factorsOut[0].(*big.Int).Sign() > 0
+	h.Liquidatable = factorsOut[0].(*big.Int).Sign() > 0 || factorsOut[1].(*big.Int).Sign() > 0
 
 	return h, nil
 }

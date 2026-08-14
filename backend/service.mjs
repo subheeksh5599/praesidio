@@ -197,7 +197,9 @@ async function loop() {
 function healthServer() {
   const srv = http.createServer((req, res) => {
     if (req.url === "/health" || req.url === "/") {
-      const ok = health.teeReachable && health.lastError === null;
+      // Healthy = the loop has run and the registry read succeeded. teeReachable
+      // is informational (only set once a guard check actually runs).
+      const ok = health.lastLoop !== null && health.lastError === null;
       res.writeHead(ok ? 200 : 503, { "content-type": "application/json" });
       res.end(JSON.stringify({ status: ok ? "ok" : "degraded", uptimeSec: Math.round((Date.now() - start) / 1000), ...health }));
       return;
