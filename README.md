@@ -217,12 +217,12 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Registry deployed on Coston2 | ✅ Real | `0xc657e198…`, owner + enclave signer set, verified on-chain |
 | TEE guard extension (Go) | ✅ Real | builds + tests green; `CHECK_VAULT` reads real chain signals live |
 | Guardian service (loop + TEE wiring + nonce safety) | ✅ Real | `backend/service.mjs`; reads guards, calls the TEE, relays signed actions |
-| Backend monitor — live Coston2 reads | ✅ Real | verified: vault `0x55c815…`, 16.86 C2FLR collateral, XRP/USD live |
+| Backend monitor — live Coston2 reads | ✅ Real | verified: vault `0x55c815…`, 16,864,377,661 wei collateral, XRP/USD live |
 | Web console (Watch / Defend / Prove, own URLs) | ✅ Real | `next build` green; real reads, real wallet txns, zero mocks |
 | Digest/signature correctness (signer vs relayer) | ✅ Real | Go + Node produce the same digest, cross-language tested |
 | Live signed action on-chain | ⚠️ Pending | needs a registered guard — i.e. an agent vault you own (see below) |
 | Web console deployed (Vercel) | ✅ Real | https://praesidio-nu.vercel.app — live reads, zero mocks |
-| Real TEE execution mode | ⚠️ Pending | extension registration + docker path open; clearly-labeled until then |
+| Real TEE execution mode | ⚠️ Pending | extension REGISTERED on FlareTeeManager (ID `0x…102c6`); the TEE machine (GCP Confidential Space VM) is the remaining external hand-off |
 
 The one thing that cannot be built from a laptop is a registered guard: the
 registry only accepts a vault whose owner is the caller (verified against the

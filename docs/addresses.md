@@ -15,6 +15,19 @@ Registry state verified on-chain: `assetManager = 0xc1Ca88b9…`,
 `guardianSigner = 0x095b2B51…`, `guardCount = 0`, `paused = false`,
 `owner = 0x10e82f88…` (deployer).
 
+## Flare Confidential Compute registration (live 2026-08-14)
+
+| Artifact | Value | Notes |
+|---|---|---|
+| Extension ID | `0x…0102c6` (66246) | registered on FlareTeeManager `0x1a9C4A0f…` |
+| InstructionSender | `0xE2d10267EABcC068F99ED3173D1F8EF93C3A2819` | deployed; code verified on-chain |
+| TEE machine | none yet | needs a GCP Confidential Space VM (AMD SEV) — external hand-off |
+
+The extension is a registered FCC extension (deploy InstructionSender +
+`registerExtension`). Running it inside a real confidential VM is the remaining
+step, per `tee/docs/deployment-steps.md` step 6 (GCP Confidential Space + VPN
+to Flare's indexer DB).
+
 ## Access path (verified)
 
 1. FlareContractRegistry (same on all networks): `0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019`

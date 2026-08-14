@@ -21,7 +21,7 @@ Legend: `[x]` verified done · `[ ]` to do · `(P0/P1/P2)` priority · `(user)` 
 
 ### A. Feasibility — live Coston2 reads (verified)
 - [x] A1 FAssets access path resolved: FlareContractRegistry `0xaD67FE66…` → fAsset FXRP `0x0b6A36…` → `assetManager()` → AssetManager diamond `0xc1Ca88b9…` (docs/addresses.md)
-- [x] A2 Real vaults read live (4): `0x55c815…` owner, 16.86 C2FLR collateral, liq factors 0 (healthy)
+- [x] A2 Real vaults read live (4): `0x55c815…` owner, 16,864,377,661 wei collateral, liq factors 0 (healthy)
 - [x] A3 FTSO v2 XRP/USD live read verified — `getFeedById(0x015852502f555344…)` raw 1010400 = $1.0104
 
 ### B. Contracts (Solidity / Foundry)

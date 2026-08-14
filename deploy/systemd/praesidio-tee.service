@@ -1,0 +1,16 @@
+[Unit]
+Description=PRAESIDIO TEE guard (Flare Confidential Compute extension)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/praesidio/tee.env
+ExecStart=/opt/praesidio/praesidio-tee
+Restart=on-failure
+RestartSec=5
+# The enclave key is injected via EnvironmentFile; restrict file perms to root.
+User=root
+
+[Install]
+WantedBy=multi-user.target

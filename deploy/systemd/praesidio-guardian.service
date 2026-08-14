@@ -1,0 +1,15 @@
+[Unit]
+Description=PRAESIDIO guardian service (relay loop)
+After=network-online.target praesidio-tee.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/praesidio/service.env
+WorkingDirectory=/opt/praesidio/backend
+ExecStart=/usr/bin/node service.mjs
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
