@@ -12,6 +12,11 @@ ledger that anyone can verify. The strategy runs private; the record is public.
 ![tests](https://img.shields.io/badge/tests-18%20passed-green)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![stack](https://img.shields.io/badge/stack-Solidity%20%C2%B7%20Foundry%20%C2%B7%20Go%20%C2%B7%20Next.js-lightgrey)
+![live](https://img.shields.io/badge/live-Coston2-brightgreen)
+
+### ▶ Live at https://praesidio-nu.vercel.app
+
+Live demo ↗ · Repo ↗ · How it works ↓ · Run it locally ↓
 
 Built for the Flare Summer Signal hackathon. MIT licensed.
 
@@ -216,7 +221,7 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 | Web console (Watch / Defend / Prove, own URLs) | ✅ Real | `next build` green; real reads, real wallet txns, zero mocks |
 | Digest/signature correctness (signer vs relayer) | ✅ Real | Go + Node produce the same digest, cross-language tested |
 | Live signed action on-chain | ⚠️ Pending | needs a registered guard — i.e. an agent vault you own (see below) |
-| Web console deployed (Vercel) | ⚠️ Pending | build green, deploy + env not yet run |
+| Web console deployed (Vercel) | ✅ Real | https://praesidio-nu.vercel.app — live reads, zero mocks |
 | Real TEE execution mode | ⚠️ Pending | extension registration + docker path open; clearly-labeled until then |
 
 The one thing that cannot be built from a laptop is a registered guard: the
