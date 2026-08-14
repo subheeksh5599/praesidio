@@ -64,7 +64,7 @@ export default function WatchPage() {
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            XRP/USD: ${state.price?.toFixed(4) ?? "—"} · updated every 20s
+            XRP/USD: ${state.price?.toFixed(4) ?? "n/a"} · updated every 20s
           </p>
         </>
       )}

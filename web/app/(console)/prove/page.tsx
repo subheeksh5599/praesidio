@@ -26,7 +26,7 @@ export default function ProvePage() {
           </p>
           {state.guards.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">
-              No guards registered yet — nothing to prove.
+              No guards registered yet. Nothing to prove.
             </p>
           ) : (
             state.guards.map((g) => (
