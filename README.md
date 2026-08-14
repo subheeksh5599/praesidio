@@ -209,14 +209,21 @@ function getActions(uint256 _guardId) external view returns (Action[] memory);
 |---|---|---|
 | GuardianRegistry (register, policy, signer, action ledger) | ✅ Real | `contracts/src/GuardianRegistry.sol`, 18/18 tests green |
 | Replay / low-s malleability / signer-only posting guards | ✅ Real | tested revert paths |
-| TEE guard extension (Go) | ✅ Real | builds green; `CHECK_VAULT` reads real chain signals |
-| Backend monitor — live Coston2 reads | ✅ Real | verified: vault `0x55c815…`, 16.86 C2FLR collateral, factors 0, XRP/USD $1.0104 |
-| Feasibility — real agent vaults on Coston2 | ✅ Real | 4 vaults read live via the AssetManager diamond |
-| Registry deployed on Coston2 | ⚠️ Pending | deploy script ready (env-only), not yet broadcast |
-| Relayer live test | ⚠️ Pending | written (`backend/relayer.mjs`), waits for the registry deploy |
-| Web console deployed | ⚠️ Pending | `next build` green, no live URL yet |
-| Full live loop (register vault → TEE check → signed action on-chain) | ❌ Not yet | blocked on registry deployment |
-| Real TEE execution mode | ❌ Not yet | extension registration + docker path open; clearly-labeled until then |
+| Registry deployed on Coston2 | ✅ Real | `0xc657e198…`, owner + enclave signer set, verified on-chain |
+| TEE guard extension (Go) | ✅ Real | builds + tests green; `CHECK_VAULT` reads real chain signals live |
+| Guardian service (loop + TEE wiring + nonce safety) | ✅ Real | `backend/service.mjs`; reads guards, calls the TEE, relays signed actions |
+| Backend monitor — live Coston2 reads | ✅ Real | verified: vault `0x55c815…`, 16.86 C2FLR collateral, XRP/USD live |
+| Web console (Watch / Defend / Prove, own URLs) | ✅ Real | `next build` green; real reads, real wallet txns, zero mocks |
+| Digest/signature correctness (signer vs relayer) | ✅ Real | Go + Node produce the same digest, cross-language tested |
+| Live signed action on-chain | ⚠️ Pending | needs a registered guard — i.e. an agent vault you own (see below) |
+| Web console deployed (Vercel) | ⚠️ Pending | build green, deploy + env not yet run |
+| Real TEE execution mode | ⚠️ Pending | extension registration + docker path open; clearly-labeled until then |
+
+The one thing that cannot be built from a laptop is a registered guard: the
+registry only accepts a vault whose owner is the caller (verified against the
+AssetManager), and creating an agent vault requires the FAssets agent-creation
+flow (FDC AddressValidity attestation + collateral deposit). Everything up to
+that boundary is built, tested and live.
 
 ## Tests
 
@@ -250,14 +257,14 @@ forge build
 forge test
 
 # TEE guard
-cd ../tee
-go build ./...
+cd ../tee/go
+go build ./...      # + go test ./...
 
-# Backend
-cd ../backend
+# Guardian service + TEE (the live loop — see docs/LIVE_E2E.md)
+cd ../../backend
 npm install
 cp .env.example .env   # fill with Coston2 values
-node monitor.mjs
+node monitor.mjs       # one-shot real read
 
 # Web console
 cd ../web
@@ -274,7 +281,7 @@ npm run dev
 | `FASSET` | testnet FXRP `0x0b6A36…` | fAsset token; AssetManager resolved via `assetManager()` |
 | `ASSET_MANAGER` | resolved at runtime | AssetManager diamond (`0xc1Ca88b9…`) |
 | `FTSO_V2` | `0xC4e9c78E…` | FTSO v2 feed contract |
-| `GUARDIAN_REGISTRY` | — | deployed registry address (required for relayer/console) |
+| `GUARDIAN_REGISTRY` | `0xc657e198…` | deployed registry (Coston2) |
 | `GUARDIAN_SIGNER` | — | enclave signer address registered on-chain |
 | `GUARDIAN_KEY` | — | enclave signing key (TEE env only) |
 | `RELAYER_PK` | — | relayer private key (gas payer) |
@@ -293,6 +300,10 @@ registry address for the relayer, console and docs. Contracts are configured
 solc 0.8.28, via_ir, optimizer 200 (cancun) — the settings the explorer
 verification flow passes automatically.
 
+Live on Coston2: `GuardianRegistry 0xc657e19857630e74d1ea468c141d89ce8459c44e`
+(deploy tx `0x38bf3270…`, enclave signer `0x095b2B51…`, verified on-chain —
+see `docs/addresses.md`).
+
 ## Project layout
 
 ```
@@ -305,10 +316,9 @@ praesidio/
 │   ├── contracts/
 │   ├── docker/
 │   └── docs/
-├── backend/       # monitor + relayer (Node, viem)
+├── backend/       # guardian service + monitor + relayer (Node, viem)
 ├── web/           # console: WATCH / DEFEND / PROVE (Next.js)
-├── attest/        # FDC attestation helpers
-├── docs/          # addresses.md — verified Coston2 reads
+├── docs/          # addresses.md — verified Coston2 reads + deployments
 └── CHECKLIST.md   # build checklist, ticked with evidence
 ```
 

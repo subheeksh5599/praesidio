@@ -56,6 +56,12 @@ func TestRegistryDigestMatchesSolidity(t *testing.T) {
 	if got != expected {
 		t.Fatalf("digest mismatch\n got  %s\n want %s", got.Hex(), expected.Hex())
 	}
+	// Cross-language constant: the Node relayer (backend/digest.mjs) must
+	// produce this exact hex for the same inputs.
+	const crossLang = "0xbbbc9727d54eacb44ab94712676223d76bc9b62c448c478a194afdb78dea56b2"
+	if got.Hex() != crossLang {
+		t.Fatalf("digest %s != cross-language constant %s", got.Hex(), crossLang)
+	}
 }
 
 // TestSignTopUpActionRecoversSigner proves the enclave signature is a valid

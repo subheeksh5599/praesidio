@@ -6,11 +6,12 @@
 > pre-ticked. Everything deployment-related comes from env; no mocks, no simulation.
 >
 > Audit date: 2026-08-14 (code-review + production-audit lens, backend/frontend playbooks).
-> Production audit score: **58/100 — risky.** Builds are green and the contracts are
-> tested, but the product loop (read → TEE decide → sign → relay → on-chain record)
-> does not run as software yet, the registry is not deployed, and there is no CI.
-> The scoring caps apply: launch-critical path not tested end to end (≤84), CI not
-> green (≤84) — the real cap is the missing live loop itself.
+> Production audit score: **58/100 — risky** at first pass. Since then the P0 spine
+> was built and verified live: guardian service + TEE wiring + nonce safety (G1-G3),
+> RPC resilience + /health (G4-G5), TEE policy gating (I1), backend+TEE cross-language
+> tests (G6/I2), frontend route split + loading fix + honest copy (H1-H3), CI (K1),
+> registry deployed + signer set (J1). Remaining external-only step: a registered
+> guard (needs an agent vault you own — FDC flow) and the Vercel deploy.
 
 Legend: `[x]` verified done · `[ ]` to do · `(P0/P1/P2)` priority · `(user)` human action
 

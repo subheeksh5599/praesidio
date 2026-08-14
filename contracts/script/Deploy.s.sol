@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import { Script } from "forge-std/Script.sol";
+import { console2 } from "forge-std/console2.sol";
 import { GuardianRegistry } from "../src/GuardianRegistry.sol";
 
 /// @dev Minimal fAsset interface: the AssetManager entry point.

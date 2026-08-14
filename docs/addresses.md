@@ -4,6 +4,17 @@ All verified via `cast call` against Coston2 RPC. The FAssets system is NOT
 resolved through FlareContractRegistry by the names in the docs — the entry
 point is the fAsset token's `assetManager()`.
 
+## Deployed PRAESIDIO contracts (live 2026-08-14)
+
+| Contract | Address | Notes |
+|---|---|---|
+| GuardianRegistry | `0xc657e19857630e74d1ea468c141d89ce8459c44e` | deploy tx `0x38bf3270…`; owner + guardianSigner set |
+| guardianSigner (enclave key) | `0x095b2B51f0Fe4317D0E8A34D2526c42dDE6a61BE` | the address the TEE signs with |
+
+Registry state verified on-chain: `assetManager = 0xc1Ca88b9…`,
+`guardianSigner = 0x095b2B51…`, `guardCount = 0`, `paused = false`,
+`owner = 0x10e82f88…` (deployer).
+
 ## Access path (verified)
 
 1. FlareContractRegistry (same on all networks): `0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019`
